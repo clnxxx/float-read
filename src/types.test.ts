@@ -30,7 +30,7 @@ describe("normalizeConfig", () => {
     const cfg = normalizeConfig({
       fontFamily: "  ",
       fontSize: 999,
-      fontColor: "red",
+      fontColor: "red" as never,
       recentFiles: ["a", "", "b"],
       progress: { a: 0.5, b: 9, c: Number.NaN },
     });

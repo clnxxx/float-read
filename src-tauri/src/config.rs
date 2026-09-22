@@ -82,6 +82,7 @@ mod tests {
         let mut cfg = AppConfig {
             font_family: "  ".into(),
             font_size: 99,
+            font_color: "red".into(),
             recent_files: vec!["a".into(), "a".into(), "b".into(), "a".into()],
             progress: HashMap::from([
                 ("a".into(), 0.5),
@@ -91,6 +92,7 @@ mod tests {
         cfg = cfg.normalized();
         assert_eq!(cfg.font_family, DEFAULT_FONT_FAMILY);
         assert_eq!(cfg.font_size, MAX_FONT_SIZE);
+        assert_eq!(cfg.font_color, "white");
         assert_eq!(cfg.recent_files, vec!["a".to_string(), "b".to_string()]);
         assert_eq!(cfg.progress.get("a"), Some(&0.5));
         assert_eq!(cfg.progress.get("bad"), Some(&1.0));
