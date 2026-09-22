@@ -1,7 +1,7 @@
 ---
 feature: transparent-reader
 status: delivered
-updated: 2026-09-22
+updated: 2026-09-23
 branch: feature/transparent-reader
 commits: 0559e2f9d2b229720c5cc26932761275b6679c13..118c3c17bca3848176e249c529352ba9be73fd68
 ---
@@ -10,7 +10,7 @@ commits: 0559e2f9d2b229720c5cc26932761275b6679c13..118c3c17bca3848176e249c529352
 
 ## Report
 
-**What was built** — 桌面「浮阅」：Tauri 2 + Vite/TS 的透明悬浮 TXT 摸鱼阅读窗。无边框、透明、置顶、不进任务栏；正文近乎裸浮于桌面（多层 text-shadow 保读）。支持打开 TXT（UTF-8 / GB18030），字体族与 12–48px 字号即时生效并持久化。快速隐蔽：全局热键 `Cmd/Ctrl+Shift+H` 切换显隐，失焦自动隐藏；系统文件对话框期间挂起误隐藏。连续滚动阅读，按文件记录滚动比例并恢复；最近 10 条可一键打开，启动自动续读上次文件。托盘菜单作为热键失灵时的保险丝。
+**What was built** — 桌面「浮阅」：Tauri 2 + Vite/TS 的透明悬浮 TXT 摸鱼阅读窗。无边框、透明、置顶、不进任务栏；正文纯色裸浮于桌面（无阴影、无描边，降低被注意概率）。支持打开 TXT（UTF-8 / GB18030），字体族与 12–48px 字号即时生效并持久化。快速隐蔽：全局热键 `Cmd/Ctrl+Shift+H` 切换显隐，失焦自动隐藏；系统文件对话框期间挂起误隐藏。连续滚动阅读，按文件记录滚动比例并恢复；最近 10 条可一键打开，启动自动续读上次文件。托盘菜单作为热键失灵时的保险丝。
 
 **Verification** — `npm run test` PASS 4/4；`npm run typecheck` PASS；`npm run build` PASS；`cargo test` PASS 6/6（含 camelCase 序列化与配置 roundtrip、UTF-8/GB18030 解码）；`cargo check` PASS；debug 二进制 smoke 启动 2s 无 panic；`samples/demo-utf8.txt`、`samples/demo-gbk.txt` 编码解码正确。GUI 级热键/失焦/透明像素未做自动化，以代码审查 + 启动冒烟覆盖。
 
@@ -31,8 +31,8 @@ commits: 0559e2f9d2b229720c5cc26932761275b6679c13..118c3c17bca3848176e249c529352
 
 - 应用名：**浮阅**（内部工程名 `float-read`）
 - 技术栈：**Tauri 2 + Vite + TypeScript**（无框架，原生 DOM）
-- 窗口：无边框、透明背景、始终置顶、不进任务栏/Dock 主界面干扰
-- 文字直接浮在桌面上，靠 `text-shadow` 多层描边保证可读性
+- 窗口：无边框、透明背景、始终置顶、不进任务栏/Dock 主界面干扰；默认 260×320（约原 520×640 的 50%）
+- 文字直接浮在桌面上，纯色无阴影/描边（隐蔽优先，不靠 text-shadow 保读）
 - 极简交互：无常驻标题栏；页边距可拖拽窗口；角落悬停露出极简工具（打开、字体设置、隐蔽）
 
 ### 功能范围
@@ -111,7 +111,7 @@ Rust 侧 `AppConfig` 使用 `#[serde(rename_all = "camelCase")]` 与上述 JSON 
 
 - 默认字体栈：`"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif`
 - 可选：苹方 / 宋体 / 黑体 / 楷体 / Menlo / Georgia
-- 几乎无底板，正文颜色近白 `#f5f5f4` + 三重黑色 text-shadow；深色桌面/浅色桌面都可读
+- 几乎无底板，正文颜色近白 `#f5f5f4`，**不用 text-shadow / 描边**（阴影易被发现）
 - 字号、字体写入 CSS 自定义属性 `--reader-font-family` / `--reader-font-size`
 
 ### 测试边界

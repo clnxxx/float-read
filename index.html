@@ -29,9 +29,9 @@
         </div>
       </div>
 
-      <main id="reader" tabindex="0">
-        <div id="placeholder">打开 TXT 开始摸鱼阅读<br /><span>⌘⇧H 隐蔽 · 失焦自动隐藏</span></div>
-        <article id="content" hidden></article>
+      <main id="reader" tabindex="0" data-tauri-drag-region>
+        <div id="placeholder" data-tauri-drag-region>打开 TXT 开始摸鱼阅读<br /><span>⌘⇧H 隐蔽 · 失焦自动隐藏</span></div>
+        <article id="content" hidden data-tauri-drag-region></article>
       </main>
     </div>
     <script type="module" src="/src/main.ts"></script>

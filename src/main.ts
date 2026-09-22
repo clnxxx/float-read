@@ -104,6 +104,10 @@ function mountDragEdges(): void {
     el.setAttribute("data-tauri-drag-region", "");
     appRoot.appendChild(el);
   }
+  // 正文区按住左键即可拖动窗口；按钮/面板不参与拖拽
+  for (const el of document.querySelectorAll("#chrome, #panel")) {
+    el.addEventListener("mousedown", (e) => e.stopPropagation());
+  }
 }
 
 async function bootstrap(): Promise<void> {
