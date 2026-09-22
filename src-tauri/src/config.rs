@@ -45,19 +45,6 @@ impl AppConfig {
     }
 }
 
-fn default_config_path() -> PathBuf {
-    // 与 Tauri identifier `com.floatread.app` 的 app_config_dir 对齐（macOS）
-    let home = std::env::var_os("HOME").map(PathBuf::from).unwrap_or_default();
-    home.join("Library/Application Support/com.floatread.app/float-read.json")
-}
-
-fn resolve_config_path(base_dir: Option<&Path>) -> PathBuf {
-    match base_dir {
-        Some(dir) => dir.join("float-read.json"),
-        None => default_config_path(),
-    }
-}
-
 pub fn load_config_from(path: &Path) -> Result<AppConfig, String> {
     if !path.exists() {
         return Ok(AppConfig::default());
@@ -76,9 +63,9 @@ pub fn save_config_to(path: &Path, config: &AppConfig) -> Result<(), String> {
     std::fs::write(path, raw).map_err(|e| e.to_string())
 }
 
-/// 供 command 使用：把 Tauri 的 app_config_dir 作为配置目录。
+/// 配置文件位于 Tauri `app_config_dir`/float-read.json
 pub fn config_file_in(dir: &Path) -> PathBuf {
-    resolve_config_path(Some(dir))
+    dir.join("float-read.json")
 }
 
 #[cfg(test)]
