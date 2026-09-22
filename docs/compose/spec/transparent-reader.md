@@ -74,16 +74,16 @@ commits:
 | Command | 入参 | 出参 |
 |---------|------|------|
 | `load_text` | `path: string` | `{ text, encoding, path }` |
-| `load_config` | — | `Config` |
-| `save_config` | `config: Config` | `()` |
+| `load_config_cmd` | — | `Config` |
+| `save_config_cmd` | `config: Config` | `()` |
 | `toggle_window` | — | `visible: bool`（由全局热键在 Rust 侧直接处理，不强制走 invoke） |
 
 **前端接口**：
 
-- `applyFont(family: string, size: number): void` — 同步写 CSS 变量并 `save_config`
+- `applyFont(family: string, size: number): void` — 同步写 CSS 变量并 `save_config_cmd`
 - `openFile(path?: string): Promise<void>` — 无参时弹系统对话框
 - `restoreScroll(ratio: number): void` — 文本渲染后按比例滚到位置
-- 防误隐藏：系统对话框打开期间挂起 `onBlur` 隐藏；全局热键恢复后 300ms 内不因 blur 再隐藏
+- 防误隐藏：系统对话框打开期间挂起 `onBlur` 隐藏；全局热键恢复后 350ms 内不因 blur 再隐藏
 
 ### 窗口与隐蔽
 
@@ -95,7 +95,7 @@ commits:
 
 ### 字体与可读性
 
-- 默认字体栈：`"PingFang SC", "Songti SC", "Hiragino Sans GB", sans-serif`
+- 默认字体栈：`"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif`
 - 可选：苹方 / 宋体 / 黑体 / 楷体 / Menlo / Georgia
 - 几乎无底板，正文颜色近白 `#f5f5f4` + 三重黑色 text-shadow；深色桌面/浅色桌面都可读
 - 字号、字体写入 CSS 自定义属性 `--reader-font-family` / `--reader-font-size`

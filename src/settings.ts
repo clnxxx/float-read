@@ -1,4 +1,4 @@
-import { clampFontSize, FONT_OPTIONS, normalizeConfig, pushRecent, type AppConfig } from "./types";
+import { clampFontSize, FONT_OPTIONS, normalizeConfig, type AppConfig } from "./types";
 
 const familySel = document.getElementById("font-family") as HTMLSelectElement;
 const sizeInput = document.getElementById("font-size") as HTMLInputElement;
@@ -75,8 +75,4 @@ export function initSettingsUi(opts: {
     togglePanel,
     isOpen: () => !panel.hidden,
   };
-}
-
-export function nextRecent(recent: string[], path: string): string[] {
-  return pushRecent(recent, path);
 }

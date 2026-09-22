@@ -3,10 +3,11 @@ import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { applyFont, onScroll, renderText, restoreScroll, showPlaceholder } from "./reader";
-import { initSettingsUi, nextRecent } from "./settings";
+import { initSettingsUi } from "./settings";
 import {
   defaultConfig,
   normalizeConfig,
+  pushRecent,
   type AppConfig,
   type LoadedText,
 } from "./types";
@@ -79,7 +80,7 @@ async function openFile(path?: string): Promise<void> {
     const loaded = await invoke<LoadedText>("load_text", { path: target });
     currentPath = loaded.path;
     renderText(loaded);
-    config.recentFiles = nextRecent(config.recentFiles, loaded.path);
+    config.recentFiles = pushRecent(config.recentFiles, loaded.path);
     settings.setConfig(config);
     scheduleSave();
     const ratio = config.progress[loaded.path] ?? 0;
@@ -87,7 +88,8 @@ async function openFile(path?: string): Promise<void> {
     requestAnimationFrame(() => restoreScroll(ratio));
   } catch (err) {
     console.error("open file failed", err);
-    showPlaceholder(true);
+    // 失败时不清空当前正文，只在还没有书时回到占位
+    if (!currentPath) showPlaceholder(true);
   }
 }
 

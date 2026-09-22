@@ -1,7 +1,7 @@
 mod config;
 mod textload;
 
-use config::{save_config, AppConfig};
+use config::{config_file_in, load_config_from, save_config_to, AppConfig};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use tauri::menu::{Menu, MenuItem};
@@ -43,17 +43,42 @@ fn load_text(path: String) -> Result<textload::LoadedText, String> {
 }
 
 #[tauri::command]
-fn load_config_cmd(state: State<'_, HideGuard>) -> AppConfig {
-    state.config.lock().map(|c| c.clone()).unwrap_or_default()
+fn load_config_cmd(app: AppHandle, state: State<'_, HideGuard>) -> AppConfig {
+    if let Ok(cfg) = state.config.lock() {
+        return cfg.clone();
+    }
+    resolve_config(&app).unwrap_or_default()
 }
 
 #[tauri::command]
-fn save_config_cmd(state: State<'_, HideGuard>, config: AppConfig) -> Result<(), String> {
-    save_config(&config).map_err(|e| e.to_string())?;
+fn save_config_cmd(
+    app: AppHandle,
+    state: State<'_, HideGuard>,
+    config: AppConfig,
+) -> Result<(), String> {
+    let path = config_path_for(&app)?;
+    save_config_to(&path, &config)?;
     if let Ok(mut guard) = state.config.lock() {
-        *guard = config;
+        *guard = config.normalized();
     }
     Ok(())
+}
+
+fn config_path_for(app: &AppHandle) -> Result<std::path::PathBuf, String> {
+    let dir = app
+        .path()
+        .app_config_dir()
+        .map_err(|e| format!("config dir: {e}"))?;
+    Ok(config_file_in(&dir))
+}
+
+fn resolve_config(app: &AppHandle) -> Result<AppConfig, String> {
+    let path = config_path_for(app)?;
+    load_config_from(&path)
+}
+
+fn bootstrap_config(app: &AppHandle) -> AppConfig {
+    resolve_config(app).unwrap_or_default()
 }
 
 /// 系统对话框打开期间挂起「失焦隐藏」，避免打开文件时窗口自己消失。
@@ -69,7 +94,7 @@ pub fn run() {
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .manage(HideGuard {
             suspend_blur_hide: AtomicBool::new(false),
-            config: Mutex::new(AppConfig::load_or_default()),
+            config: Mutex::new(AppConfig::default()),
         })
         .invoke_handler(tauri::generate_handler![
             load_text,
@@ -78,6 +103,12 @@ pub fn run() {
             set_suspend_blur_hide
         ])
         .setup(|app| {
+            {
+                let cfg = bootstrap_config(app.handle());
+                if let Ok(mut guard) = app.state::<HideGuard>().config.lock() {
+                    *guard = cfg;
+                }
+            }
             let handle = app.handle().clone();
             app.global_shortcut().on_shortcut(
                 TOGGLE_SHORTCUT,

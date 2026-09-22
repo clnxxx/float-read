@@ -35,7 +35,3 @@ export function onScroll(cb: (ratio: number) => void): () => void {
   reader.addEventListener("scroll", handler, { passive: true });
   return () => reader.removeEventListener("scroll", handler);
 }
-
-export function getReaderEl(): HTMLElement {
-  return reader;
-}
