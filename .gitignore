@@ -1,0 +1,9 @@
+.worktrees/
+node_modules/
+dist/
+target/
+.DS_Store
+*.log
+.env
+.env.*
+src-tauri/target/
