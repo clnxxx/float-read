@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>浮阅</title>
+  </head>
+  <body>
+    <div id="app">
+      <aside id="chrome" aria-label="工具">
+        <button id="btn-open" type="button" title="打开 TXT">打开</button>
+        <button id="btn-font" type="button" title="字体设置">字体</button>
+        <button id="btn-hide" type="button" title="隐蔽 (⌘⇧H)">隐</button>
+      </aside>
+
+      <div id="panel" hidden>
+        <label>
+          字体
+          <select id="font-family"></select>
+        </label>
+        <label>
+          字号
+          <input id="font-size" type="range" min="12" max="48" step="1" />
+          <span id="font-size-val">18</span>
+        </label>
+        <div class="recent-block">
+          <div class="recent-title">最近</div>
+          <ul id="recent-list"></ul>
+        </div>
+      </div>
+
+      <main id="reader" tabindex="0">
+        <div id="placeholder">打开 TXT 开始摸鱼阅读<br /><span>⌘⇧H 隐蔽 · 失焦自动隐藏</span></div>
+        <article id="content" hidden></article>
+      </main>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

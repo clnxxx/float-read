@@ -1,0 +1,123 @@
+---
+feature: transparent-reader
+status: in-progress
+updated: 2026-09-22
+branch: feature/transparent-reader
+commits: 
+---
+
+# 浮阅 · 透明悬浮看书
+
+## Report
+
+## [S1] Problem
+
+在桌面上阅读 TXT 时，普通阅读器会遮挡工作区，切换窗口也容易被看到。需要一个几乎只显示文字的透明悬浮阅读窗：可改字体和字号，能一键/失焦快速隐蔽，并记住阅读进度。
+
+## [S2] Design
+
+### 产品形态
+
+- 应用名：**浮阅**（内部工程名 `float-read`）
+- 技术栈：**Tauri 2 + Vite + TypeScript**（无框架，原生 DOM）
+- 窗口：无边框、透明背景、始终置顶、不进任务栏/Dock 主界面干扰
+- 文字直接浮在桌面上，靠 `text-shadow` 多层描边保证可读性
+- 极简交互：无常驻标题栏；页边距可拖拽窗口；角落悬停露出极简工具（打开、字体设置、隐蔽）
+
+### 功能范围
+
+| 能力 | 行为 |
+|------|------|
+| 打开 TXT | 系统文件对话框，支持 `.txt`；编码自动识别 UTF-8 / GB18030（含 GBK） |
+| 字体 | 字体族下拉（系统中文字体 + 常用衬线/无衬线/等宽），立即预览 |
+| 字号 | 12–48px，滑杆 + 数字，立即预览 |
+| 阅读 | 连续滚动；鼠标滚轮 / 触控板 |
+| 进度 | 按文件绝对路径记录滚动比例（0–1），打开同一文件时恢复 |
+| 最近文件 | 最多 10 条，设置面板可一键打开 |
+| 快速隐蔽 | ① 全局热键 `CmdOrCtrl+Shift+H` 切换显示/隐藏 ② 窗口失焦自动隐藏 |
+| 隐蔽语义 | 隐藏 = `window.hide()`（不销毁、不清进度）；恢复 = `window.show()` + 聚焦 |
+
+### 架构
+
+```
+┌─────────────────────────────────────────────┐
+│  WebView (Vite + TS)                        │
+│  ├─ reader.ts   文本渲染 / 滚动进度          │
+│  ├─ settings.ts 字体字号 / 最近文件 UI       │
+│  └─ main.ts     装配、热键状态、防误隐藏      │
+│                    ▲ invoke                 │
+├────────────────────┼────────────────────────┤
+│  Rust (src-tauri)  │                        │
+│  ├─ load_text      读文件 + 编码探测         │
+│  ├─ persist        配置与进度 JSON 读写      │
+│  ├─ window         透明/置顶/拖拽/显隐       │
+│  └─ global_shortcut CmdOrCtrl+Shift+H       │
+│  数据目录: app_config_dir/float-read.json    │
+└─────────────────────────────────────────────┘
+```
+
+### 合同
+
+**配置文件** `float-read.json`（app config dir）：
+
+```json
+{
+  "fontFamily": "PingFang SC",
+  "fontSize": 18,
+  "recentFiles": ["/abs/path/a.txt"],
+  "progress": { "/abs/path/a.txt": 0.42 }
+}
+```
+
+**Rust commands**：
+
+| Command | 入参 | 出参 |
+|---------|------|------|
+| `load_text` | `path: string` | `{ text, encoding, path }` |
+| `load_config` | — | `Config` |
+| `save_config` | `config: Config` | `()` |
+| `toggle_window` | — | `visible: bool`（由全局热键在 Rust 侧直接处理，不强制走 invoke） |
+
+**前端接口**：
+
+- `applyFont(family: string, size: number): void` — 同步写 CSS 变量并 `save_config`
+- `openFile(path?: string): Promise<void>` — 无参时弹系统对话框
+- `restoreScroll(ratio: number): void` — 文本渲染后按比例滚到位置
+- 防误隐藏：系统对话框打开期间挂起 `onBlur` 隐藏；全局热键恢复后 300ms 内不因 blur 再隐藏
+
+### 窗口与隐蔽
+
+- `tauri.conf.json`: `decorations: false`, `transparent: true`, `alwaysOnTop: true`, `shadow: false`, `skipTaskbar: true`
+- macOS：`titleBarStyle` 保持隐藏；拖拽区域 = 阅读区四边 padding（`data-tauri-drag-region`）
+- 全局热键：`global-shortcut` 插件注册 `CommandOrControl+Shift+H`，toggle hide/show
+- `WebviewWindow::on_blur` → 隐藏；热键显示后的短暂豁免窗口防抖
+- 隐藏时 `hide()` 不卸载 WebView，滚动位置与已读配置保持
+
+### 字体与可读性
+
+- 默认字体栈：`"PingFang SC", "Songti SC", "Hiragino Sans GB", sans-serif`
+- 可选：苹方 / 宋体 / 黑体 / 楷体 / Menlo / Georgia
+- 几乎无底板，正文颜色近白 `#f5f5f4` + 三重黑色 text-shadow；深色桌面/浅色桌面都可读
+- 字号、字体写入 CSS 自定义属性 `--reader-font-family` / `--reader-font-size`
+
+### 测试边界
+
+- 单测（前端 vitest 或纯 node）：进度比例夹紧、配置默认值合并、编码选择逻辑（若放在前端）；Rust 侧 `load_text` 的 UTF-8/GB18030 探测单测
+- 不把系统对话框、全局热键、真实透明像素列入自动化；验收以手动走查清单为准（见 Tasks）
+
+## [S3] Out of Scope
+
+- EPUB / PDF / 网页阅读
+- 目录、书签、搜索、分页模式
+- 行距、颜色主题、背景透明度、字重等完整排版设置
+- 老板键伪装、多书架管理、云同步
+- Windows 专项打包（代码保持 Tauri 可移植，但本阶段只保证 macOS 可构建运行）
+
+## Tasks
+
+- [ ] T1: 脚手架 — Vite + TS + Tauri 2 工程可 `npm run build` 与 `cargo check` 通过（covers: S2）
+- [ ] T2: TXT 加载与编码 — `load_text` 读文件，UTF-8/GB18030 可读，错误路径返回明确信息（covers: S2）
+- [ ] T3: 阅读渲染与字体字号 — 连续滚动正文；字体族/字号可改并立即生效、写入配置（covers: S2）
+- [ ] T4: 透明窗与快速隐蔽 — 透明置顶无边框；`CmdOrCtrl+Shift+H` 切换；失焦隐藏；对话框期间不误隐藏（covers: S2）
+- [ ] T5: 进度与最近文件 — 按文件记滚动比例并恢复；最近 10 条可打开（covers: S2）
+- [ ] T6: 手动走查 — 打开 GBK/UTF-8 样书、改字号字体、热键隐藏恢复、失焦隐藏、进度恢复均符合预期（covers: S2; depends: T1, T2, T3, T4, T5）

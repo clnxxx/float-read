@@ -1,0 +1,244 @@
+:root {
+  --reader-font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --reader-font-size: 18px;
+  --reader-ink: #f4f4f2;
+  --chrome-bg: rgba(12, 12, 14, 0.55);
+  --chrome-ink: #f4f4f2;
+  --chrome-border: rgba(255, 255, 255, 0.14);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent !important;
+  overflow: hidden;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+#app {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+/* 四边留白可拖拽窗口 */
+#reader {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  padding: 28px 32px;
+  cursor: text;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+#reader::-webkit-scrollbar {
+  width: 6px;
+}
+
+#reader::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 3px;
+}
+
+#placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--reader-ink);
+  font-family: var(--reader-font-family);
+  font-size: calc(var(--reader-font-size) * 0.95);
+  line-height: 1.7;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0.85;
+  text-shadow:
+    0 0 2px rgba(0, 0, 0, 0.95),
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    0 0 10px rgba(0, 0, 0, 0.65);
+}
+
+#placeholder span {
+  font-size: 0.75em;
+  opacity: 0.75;
+}
+
+#content {
+  color: var(--reader-ink);
+  font-family: var(--reader-font-family);
+  font-size: var(--reader-font-size);
+  line-height: 1.85;
+  letter-spacing: 0.02em;
+  white-space: pre-wrap;
+  word-break: break-word;
+  text-shadow:
+    0 0 2px rgba(0, 0, 0, 0.95),
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    0 1px 6px rgba(0, 0, 0, 0.75),
+    0 0 18px rgba(0, 0, 0, 0.45);
+  min-height: 100%;
+  padding-bottom: 24px;
+}
+
+/* 极简角标：默认半透明，悬停显现 */
+#chrome {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 6px;
+  opacity: 0.18;
+  transition: opacity 0.15s ease;
+  z-index: 20;
+}
+
+#chrome:hover,
+#chrome:focus-within {
+  opacity: 1;
+}
+
+#chrome button {
+  appearance: none;
+  border: 1px solid var(--chrome-border);
+  background: var(--chrome-bg);
+  color: var(--chrome-ink);
+  border-radius: 6px;
+  font-family: var(--reader-font-family);
+  font-size: 12px;
+  line-height: 1;
+  padding: 6px 8px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+
+#chrome button:hover {
+  background: rgba(40, 40, 44, 0.75);
+}
+
+#panel {
+  position: fixed;
+  top: 40px;
+  right: 8px;
+  width: 240px;
+  max-height: 70vh;
+  overflow: auto;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--chrome-border);
+  background: var(--chrome-bg);
+  color: var(--chrome-ink);
+  font-family: var(--reader-font-family);
+  font-size: 13px;
+  backdrop-filter: blur(12px);
+  z-index: 21;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#panel[hidden] {
+  display: none !important;
+}
+
+#panel label {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+#panel select,
+#panel input[type="range"] {
+  width: 100%;
+}
+
+#panel select {
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--chrome-ink);
+  border: 1px solid var(--chrome-border);
+  border-radius: 6px;
+  padding: 4px 6px;
+}
+
+.recent-title {
+  opacity: 0.7;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+#recent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+#recent-list button {
+  appearance: none;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: var(--chrome-ink);
+  font-size: 12px;
+  padding: 4px 2px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-radius: 4px;
+}
+
+#recent-list button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* 拖拽边条（覆盖在 padding 上，不挡文本选择） */
+.drag-edge {
+  position: fixed;
+  z-index: 5;
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+.drag-edge.top {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 10px;
+}
+
+.drag-edge.bottom {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 10px;
+}
+
+.drag-edge.left {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 12px;
+}
+
+.drag-edge.right {
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+}
