@@ -4,9 +4,12 @@ export interface LoadedText {
   path: string;
 }
 
+export type FontColor = "white" | "black";
+
 export interface AppConfig {
   fontFamily: string;
   fontSize: number;
+  fontColor: FontColor;
   recentFiles: string[];
   progress: Record<string, number>;
 }
@@ -14,6 +17,7 @@ export interface AppConfig {
 export const MIN_FONT_SIZE = 12;
 export const MAX_FONT_SIZE = 48;
 export const DEFAULT_FONT_FAMILY = "PingFang SC";
+export const DEFAULT_FONT_COLOR: FontColor = "white";
 
 export const FONT_OPTIONS = [
   "PingFang SC",
@@ -29,6 +33,7 @@ export function defaultConfig(): AppConfig {
   return {
     fontFamily: DEFAULT_FONT_FAMILY,
     fontSize: 18,
+    fontColor: DEFAULT_FONT_COLOR,
     recentFiles: [],
     progress: {},
   };
@@ -44,6 +49,10 @@ export function clampFontSize(size: number): number {
   return Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE, Math.round(size)));
 }
 
+export function normalizeFontColor(value: unknown): FontColor {
+  return value === "black" ? "black" : "white";
+}
+
 export function normalizeConfig(input: Partial<AppConfig> | null | undefined): AppConfig {
   const base = defaultConfig();
   if (!input || typeof input !== "object") return base;
@@ -52,6 +61,7 @@ export function normalizeConfig(input: Partial<AppConfig> | null | undefined): A
       ? input.fontFamily.trim()
       : base.fontFamily;
   const fontSize = clampFontSize(Number(input.fontSize));
+  const fontColor = normalizeFontColor(input.fontColor);
   const recentFiles = Array.isArray(input.recentFiles)
     ? input.recentFiles.filter((x): x is string => typeof x === "string" && x.length > 0).slice(0, 10)
     : [];
@@ -62,7 +72,7 @@ export function normalizeConfig(input: Partial<AppConfig> | null | undefined): A
       if (Number.isFinite(r)) progress[k] = r;
     }
   }
-  return { fontFamily, fontSize, recentFiles, progress };
+  return { fontFamily, fontSize, fontColor, recentFiles, progress };
 }
 
 export function pushRecent(recent: string[], path: string): string[] {

@@ -159,6 +159,27 @@ body {
   gap: 8px;
 }
 
+#panel label.color-row {
+  grid-template-columns: 36px auto 1fr;
+}
+
+#font-color {
+  appearance: none;
+  border: 1px solid var(--chrome-border);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--chrome-ink);
+  border-radius: 6px;
+  font-family: var(--reader-font-family);
+  font-size: 12px;
+  padding: 4px 12px;
+  cursor: pointer;
+  min-width: 44px;
+}
+
+#font-color:hover {
+  background: rgba(40, 40, 44, 0.75);
+}
+
 #panel select,
 #panel input[type="range"] {
   width: 100%;

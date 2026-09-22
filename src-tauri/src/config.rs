@@ -13,6 +13,7 @@ const MAX_RECENT: usize = 10;
 pub struct AppConfig {
     pub font_family: String,
     pub font_size: u32,
+    pub font_color: String,
     pub recent_files: Vec<String>,
     pub progress: HashMap<String, f64>,
 }
@@ -22,6 +23,7 @@ impl Default for AppConfig {
         Self {
             font_family: DEFAULT_FONT_FAMILY.to_string(),
             font_size: DEFAULT_FONT_SIZE,
+            font_color: "white".to_string(),
             recent_files: Vec::new(),
             progress: HashMap::new(),
         }
@@ -34,6 +36,9 @@ impl AppConfig {
             self.font_family = DEFAULT_FONT_FAMILY.to_string();
         }
         self.font_size = self.font_size.clamp(MIN_FONT_SIZE, MAX_FONT_SIZE);
+        if self.font_color != "black" && self.font_color != "white" {
+            self.font_color = "white".to_string();
+        }
         // dedup keeping first occurrence, then cap
         let mut seen = std::collections::HashSet::new();
         self.recent_files.retain(|p| seen.insert(p.clone()));
@@ -97,13 +102,15 @@ mod tests {
         let raw = serde_json::to_string(&cfg).unwrap();
         assert!(raw.contains("\"fontFamily\""), "got {raw}");
         assert!(raw.contains("\"fontSize\""), "got {raw}");
+        assert!(raw.contains("\"fontColor\""), "got {raw}");
         assert!(raw.contains("\"recentFiles\""), "got {raw}");
         let back: AppConfig = serde_json::from_str(
-            r#"{"fontFamily":"Songti SC","fontSize":22,"recentFiles":["/a.txt"],"progress":{"/a.txt":0.3}}"#,
+            r#"{"fontFamily":"Songti SC","fontSize":22,"fontColor":"black","recentFiles":["/a.txt"],"progress":{"/a.txt":0.3}}"#,
         )
         .unwrap();
         assert_eq!(back.font_family, "Songti SC");
         assert_eq!(back.font_size, 22);
+        assert_eq!(back.font_color, "black");
         assert_eq!(back.recent_files, vec!["/a.txt".to_string()]);
     }
 

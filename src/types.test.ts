@@ -30,15 +30,22 @@ describe("normalizeConfig", () => {
     const cfg = normalizeConfig({
       fontFamily: "  ",
       fontSize: 999,
+      fontColor: "red",
       recentFiles: ["a", "", "b"],
       progress: { a: 0.5, b: 9, c: Number.NaN },
     });
     expect(cfg.fontFamily).toBe(defaultConfig().fontFamily);
     expect(cfg.fontSize).toBe(48);
+    expect(cfg.fontColor).toBe("white");
     expect(cfg.recentFiles).toEqual(["a", "b"]);
     expect(cfg.progress.a).toBe(0.5);
     expect(cfg.progress.b).toBe(1);
     expect(cfg.progress.c).toBe(0);
+  });
+
+  it("keeps black font color", () => {
+    const cfg = normalizeConfig({ fontColor: "black" });
+    expect(cfg.fontColor).toBe("black");
   });
 });
 

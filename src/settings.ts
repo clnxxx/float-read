@@ -1,18 +1,27 @@
-import { clampFontSize, FONT_OPTIONS, normalizeConfig, type AppConfig } from "./types";
+import {
+  clampFontSize,
+  FONT_OPTIONS,
+  normalizeConfig,
+  type AppConfig,
+  type FontColor,
+} from "./types";
 
 const familySel = document.getElementById("font-family") as HTMLSelectElement;
 const sizeInput = document.getElementById("font-size") as HTMLInputElement;
 const sizeVal = document.getElementById("font-size-val") as HTMLSpanElement;
+const colorBtn = document.getElementById("font-color") as HTMLButtonElement;
 const panel = document.getElementById("panel") as HTMLElement;
 const recentList = document.getElementById("recent-list") as HTMLUListElement;
 
-export type FontChangeHandler = (family: string, size: number) => void;
+export type FontChangeHandler = (family: string, size: number, color: FontColor) => void;
 export type OpenRecentHandler = (path: string) => void;
 
 export function initSettingsUi(opts: {
   onFontChange: FontChangeHandler;
   onOpenRecent: OpenRecentHandler;
 }): { setConfig: (cfg: AppConfig) => void; togglePanel: () => void; isOpen: () => boolean } {
+  let fontColor: FontColor = "white";
+
   for (const f of FONT_OPTIONS) {
     const opt = document.createElement("option");
     opt.value = f;
@@ -20,13 +29,20 @@ export function initSettingsUi(opts: {
     familySel.appendChild(opt);
   }
 
-  familySel.addEventListener("change", () => {
-    opts.onFontChange(familySel.value, Number(sizeInput.value));
-  });
+  function emitFontChange() {
+    opts.onFontChange(familySel.value, Number(sizeInput.value), fontColor);
+  }
+
+  familySel.addEventListener("change", emitFontChange);
   sizeInput.addEventListener("input", () => {
     const size = clampFontSize(Number(sizeInput.value));
     sizeVal.textContent = String(size);
-    opts.onFontChange(familySel.value, size);
+    emitFontChange();
+  });
+  colorBtn.addEventListener("click", () => {
+    fontColor = fontColor === "white" ? "black" : "white";
+    colorBtn.textContent = fontColor === "black" ? "黑" : "白";
+    emitFontChange();
   });
 
   function renderRecent(recent: string[]) {
@@ -63,6 +79,8 @@ export function initSettingsUi(opts: {
     }
     sizeInput.value = String(normalized.fontSize);
     sizeVal.textContent = String(normalized.fontSize);
+    fontColor = normalized.fontColor;
+    colorBtn.textContent = fontColor === "black" ? "黑" : "白";
     renderRecent(normalized.recentFiles);
   }
 

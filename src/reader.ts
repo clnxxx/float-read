@@ -1,12 +1,16 @@
-import { clampRatio, type LoadedText } from "./types";
+import { clampRatio, type FontColor, type LoadedText } from "./types";
 
 const reader = document.getElementById("reader") as HTMLElement;
 const content = document.getElementById("content") as HTMLElement;
 const placeholder = document.getElementById("placeholder") as HTMLElement;
 
-export function applyFont(family: string, size: number): void {
+export function applyFont(family: string, size: number, color: FontColor): void {
   document.documentElement.style.setProperty("--reader-font-family", `"${family}", sans-serif`);
   document.documentElement.style.setProperty("--reader-font-size", `${size}px`);
+  document.documentElement.style.setProperty(
+    "--reader-ink",
+    color === "black" ? "#141414" : "#f4f4f2",
+  );
 }
 
 export function showPlaceholder(show: boolean): void {

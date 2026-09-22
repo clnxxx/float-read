@@ -22,10 +22,11 @@ const btnHide = document.getElementById("btn-hide") as HTMLButtonElement;
 const appRoot = document.getElementById("app") as HTMLElement;
 
 const settings = initSettingsUi({
-  onFontChange: (family, size) => {
+  onFontChange: (family, size, color) => {
     config.fontFamily = family;
     config.fontSize = size;
-    applyFont(family, size);
+    config.fontColor = color;
+    applyFont(family, size, color);
     scheduleSave();
   },
   onOpenRecent: (path) => {
@@ -57,7 +58,7 @@ async function loadConfig(): Promise<void> {
     config = defaultConfig();
   }
   settings.setConfig(config);
-  applyFont(config.fontFamily, config.fontSize);
+  applyFont(config.fontFamily, config.fontSize, config.fontColor);
 }
 
 async function openFile(path?: string): Promise<void> {
