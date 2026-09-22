@@ -18,8 +18,9 @@ body {
   height: 100%;
   background: transparent !important;
   overflow: hidden;
-  user-select: text;
-  -webkit-user-select: text;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
 }
 
 #app {
@@ -35,9 +36,13 @@ body {
   inset: 0;
   overflow: auto;
   padding: 16px 18px;
-  cursor: text;
+  cursor: grab;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+#reader:active {
+  cursor: grabbing;
 }
 
 #reader::-webkit-scrollbar {
