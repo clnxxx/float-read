@@ -1,14 +1,25 @@
 ---
 feature: transparent-reader
-status: in-progress
+status: delivered
 updated: 2026-09-22
 branch: feature/transparent-reader
-commits: 
+commits: 0559e2f9d2b229720c5cc26932761275b6679c13..118c3c17bca3848176e249c529352ba9be73fd68
 ---
 
 # 浮阅 · 透明悬浮看书
 
 ## Report
+
+**What was built** — 桌面「浮阅」：Tauri 2 + Vite/TS 的透明悬浮 TXT 摸鱼阅读窗。无边框、透明、置顶、不进任务栏；正文近乎裸浮于桌面（多层 text-shadow 保读）。支持打开 TXT（UTF-8 / GB18030），字体族与 12–48px 字号即时生效并持久化。快速隐蔽：全局热键 `Cmd/Ctrl+Shift+H` 切换显隐，失焦自动隐藏；系统文件对话框期间挂起误隐藏。连续滚动阅读，按文件记录滚动比例并恢复；最近 10 条可一键打开，启动自动续读上次文件。托盘菜单作为热键失灵时的保险丝。
+
+**Verification** — `npm run test` PASS 4/4；`npm run typecheck` PASS；`npm run build` PASS；`cargo test` PASS 6/6（含 camelCase 序列化与配置 roundtrip、UTF-8/GB18030 解码）；`cargo check` PASS；debug 二进制 smoke 启动 2s 无 panic；`samples/demo-utf8.txt`、`samples/demo-gbk.txt` 编码解码正确。GUI 级热键/失焦/透明像素未做自动化，以代码审查 + 启动冒烟覆盖。
+
+**Journey log** —
+1. 选型敲定 Tauri 2 后环境缺 Rust，rustup 中断装坏 toolchain，重装 stable 才可编译。
+2. 审查抓到 serde 字段大小写不一致导致配置静默回默认值——两侧单测都测不到 IPC 边界，补了 camelCase 往返测试。
+3. encoding_rs 的 `GBK` ≠ 完整 GB18030，规格写了 GB18030 就该用 `GB18030`。
+4. 失焦隐藏与系统文件对话框会打架：对话框一弹主窗就隐；用 `set_suspend_blur_hide` 挂起后解决。
+5. 配置目录应跟 Tauri `app_config_dir`，避免写死 `~/Library` 破坏可移植性。
 
 ## [S1] Problem
 
@@ -69,6 +80,8 @@ commits:
 }
 ```
 
+Rust 侧 `AppConfig` 使用 `#[serde(rename_all = "camelCase")]` 与上述 JSON / TS 对齐。
+
 **Rust commands**：
 
 | Command | 入参 | 出参 |
@@ -76,6 +89,7 @@ commits:
 | `load_text` | `path: string` | `{ text, encoding, path }` |
 | `load_config_cmd` | — | `Config` |
 | `save_config_cmd` | `config: Config` | `()` |
+| `set_suspend_blur_hide` | `suspend: boolean` | `()` |
 | `toggle_window` | — | `visible: bool`（由全局热键在 Rust 侧直接处理，不强制走 invoke） |
 
 **前端接口**：
@@ -115,9 +129,10 @@ commits:
 
 ## Tasks
 
-- [ ] T1: 脚手架 — Vite + TS + Tauri 2 工程可 `npm run build` 与 `cargo check` 通过（covers: S2）
-- [ ] T2: TXT 加载与编码 — `load_text` 读文件，UTF-8/GB18030 可读，错误路径返回明确信息（covers: S2）
-- [ ] T3: 阅读渲染与字体字号 — 连续滚动正文；字体族/字号可改并立即生效、写入配置（covers: S2）
-- [ ] T4: 透明窗与快速隐蔽 — 透明置顶无边框；`CmdOrCtrl+Shift+H` 切换；失焦隐藏；对话框期间不误隐藏（covers: S2）
-- [ ] T5: 进度与最近文件 — 按文件记滚动比例并恢复；最近 10 条可打开（covers: S2）
+- [x] T1: 脚手架 — Vite + TS + Tauri 2 工程可 `npm run build` 与 `cargo check` 通过（covers: S2）
+- [x] T2: TXT 加载与编码 — `load_text` 读文件，UTF-8/GB18030 可读，错误路径返回明确信息（covers: S2）
+- [x] T3: 阅读渲染与字体字号 — 连续滚动正文；字体族/字号可改并立即生效、写入配置（covers: S2）
+- [x] T4: 透明窗与快速隐蔽 — 透明置顶无边框；`CmdOrCtrl+Shift+H` 切换；失焦隐藏；对话框期间不误隐藏（covers: S2）
+- [x] T5: 进度与最近文件 — 按文件记滚动比例并恢复；最近 10 条可打开（covers: S2）
 - [ ] T6: 手动走查 — 打开 GBK/UTF-8 样书、改字号字体、热键隐藏恢复、失焦隐藏、进度恢复均符合预期（covers: S2; depends: T1, T2, T3, T4, T5）
+  - 已覆盖：样书编码解码、配置 roundtrip、构建与启动冒烟、独立代码审查（含隐蔽与字体路径）。完整 GUI 交互（真人热键/失焦）待本机点验。
