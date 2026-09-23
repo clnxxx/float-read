@@ -39,7 +39,7 @@ body {
   position: absolute;
   inset: 0;
   overflow: auto;
-  padding: 16px 18px;
+  padding: 6px 14px;
   cursor: grab;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
@@ -84,12 +84,12 @@ body {
   color: var(--reader-ink);
   font-family: var(--reader-font-family);
   font-size: var(--reader-font-size);
-  line-height: 1.85;
+  line-height: 1.45;
   letter-spacing: 0.02em;
   white-space: pre-wrap;
   word-break: break-word;
   min-height: 100%;
-  padding-bottom: 24px;
+  padding-bottom: 8px;
 }
 
 /* 极简角标：默认半透明，悬停显现 */
