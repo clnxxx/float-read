@@ -18,5 +18,6 @@ npm run tauri dev
 - `Cmd/Ctrl + Shift + H`：隐藏 / 恢复
 - 点击其它窗口：自动隐藏
 - `Esc`：隐藏（面板打开时先关面板）
+- 聚焦时左手键区：`W/S` 上下滚，`A/D`（或 `PgUp/PgDn/空格`）按页翻，`Home/End` 首尾
 
 托盘图标可再次唤出或退出。

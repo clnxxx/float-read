@@ -144,11 +144,58 @@ async function bootstrap(): Promise<void> {
 
   onScroll((ratio) => persistProgress(ratio));
 
-  // 打开对话框期间暂时关闭「失焦隐藏」在前端的额外动作；窗口层由 Rust 热键豁免兜底
+  // 左手键区翻页：W/S 滚动，A/D 按页；焦点在表单控件时不抢键
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      if (!settings.isOpen()) hideWindow();
-      else settings.togglePanel();
+    const t = e.target as HTMLElement | null;
+    if (t && (t.tagName === "INPUT" || t.tagName === "SELECT" || t.tagName === "TEXTAREA")) {
+      return;
+    }
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+    const reader = document.getElementById("reader")!;
+    const line = 48;
+    const page = Math.max(80, reader.clientHeight * 0.9);
+
+    switch (e.key) {
+      case "w":
+      case "W":
+      case "ArrowUp":
+        e.preventDefault();
+        reader.scrollTop = Math.max(0, reader.scrollTop - line);
+        break;
+      case "s":
+      case "S":
+      case "ArrowDown":
+        e.preventDefault();
+        reader.scrollTop = reader.scrollTop + line;
+        break;
+      case "a":
+      case "A":
+      case "PageUp":
+        e.preventDefault();
+        reader.scrollTop = Math.max(0, reader.scrollTop - page);
+        break;
+      case "d":
+      case "D":
+      case "PageDown":
+      case " ":
+        e.preventDefault();
+        reader.scrollTop = reader.scrollTop + page;
+        break;
+      case "Home":
+        e.preventDefault();
+        reader.scrollTop = 0;
+        break;
+      case "End":
+        e.preventDefault();
+        reader.scrollTop = reader.scrollHeight;
+        break;
+      case "Escape":
+        if (!settings.isOpen()) hideWindow();
+        else settings.togglePanel();
+        break;
+      default:
+        break;
     }
   });
 
