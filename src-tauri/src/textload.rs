@@ -1,6 +1,8 @@
-use encoding_rs::{Encoding, GB18030, UTF_8};
 use serde::Serialize;
 use std::path::Path;
+
+use crate::epub;
+use crate::pdftext;
 
 #[derive(Debug, Serialize)]
 pub struct LoadedText {
@@ -9,7 +11,9 @@ pub struct LoadedText {
     pub path: String,
 }
 
-/// 优先严格 UTF-8；失败则按 GB18030 解码（覆盖 GBK，兼容中文 TXT）。
+use encoding_rs::{Encoding, GB18030, UTF_8};
+
+/// 优先严格 UTF-8；失败则按 GB18030 解码（GBK 是其子集）。
 pub fn decode_bytes(bytes: &[u8]) -> (&'static Encoding, String, bool) {
     let mut decoder = UTF_8.new_decoder();
     let mut out = String::with_capacity(bytes.len());
@@ -17,12 +21,46 @@ pub fn decode_bytes(bytes: &[u8]) -> (&'static Encoding, String, bool) {
     if result == encoding_rs::CoderResult::InputEmpty {
         return (UTF_8, out, false);
     }
-    // UTF-8 失败 → GB18030（GBK 是其子集）
     let (text, _, had_errors) = GB18030.decode(bytes);
     (GB18030, text.into_owned(), had_errors)
 }
 
-pub fn load_text(path: &str) -> Result<LoadedText, String> {
+fn ext_lower(path: &str) -> String {
+    Path::new(path)
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(|e| e.to_ascii_lowercase())
+        .unwrap_or_default()
+}
+
+/// 按扩展名打开 txt / epub / pdf
+pub fn load_book(path: &str) -> Result<LoadedText, String> {
+    let p = Path::new(path);
+    if !p.exists() {
+        return Err(format!("文件不存在: {path}"));
+    }
+    match ext_lower(path).as_str() {
+        "epub" => {
+            let text = epub::extract_text(p)?;
+            Ok(LoadedText {
+                text,
+                encoding: "epub".into(),
+                path: path.to_string(),
+            })
+        }
+        "pdf" => {
+            let text = pdftext::extract_text(p)?;
+            Ok(LoadedText {
+                text,
+                encoding: "pdf".into(),
+                path: path.to_string(),
+            })
+        }
+        _ => load_txt(path),
+    }
+}
+
+pub fn load_txt(path: &str) -> Result<LoadedText, String> {
     let p = Path::new(path);
     if !p.exists() {
         return Err(format!("文件不存在: {path}"));
@@ -35,13 +73,9 @@ pub fn load_text(path: &str) -> Result<LoadedText, String> {
             path: path.to_string(),
         });
     }
-    // 跳过 UTF-8 BOM
-    let bytes = bytes
-        .strip_prefix(&[0xEF, 0xBB, 0xBF])
-        .unwrap_or(&bytes);
+    let bytes = bytes.strip_prefix(&[0xEF, 0xBB, 0xBF]).unwrap_or(&bytes);
     let (enc, text, had_errors) = decode_bytes(bytes);
     if had_errors && enc == GB18030 {
-        // 仍返回可读文本，但标注 unknown，避免静默乱码
         return Ok(LoadedText {
             text,
             encoding: "gb18030-with-errors".into(),
@@ -69,7 +103,6 @@ mod tests {
 
     #[test]
     fn decodes_gbk_fallback() {
-        // "摸鱼看书" in GBK
         let gbk_bytes: [u8; 8] = [0xC3, 0xFE, 0xD3, 0xE3, 0xBF, 0xB4, 0xCA, 0xE9];
         let (enc, text, err) = decode_bytes(&gbk_bytes);
         assert_eq!(enc, GB18030);
@@ -81,8 +114,30 @@ mod tests {
     fn empty_file_ok() {
         let dir = std::env::temp_dir().join("float-read-test-empty.txt");
         std::fs::write(&dir, b"").unwrap();
-        let loaded = load_text(dir.to_str().unwrap()).unwrap();
+        let loaded = load_txt(dir.to_str().unwrap()).unwrap();
         assert_eq!(loaded.text, "");
         let _ = std::fs::remove_file(&dir);
+    }
+
+    #[test]
+    fn unknown_extension_falls_back_to_txt() {
+        let dir = std::env::temp_dir().join("float-read-test.unknown");
+        std::fs::write(&dir, "abc".as_bytes()).unwrap();
+        let loaded = load_book(dir.to_str().unwrap()).unwrap();
+        assert_eq!(loaded.text, "abc");
+        let _ = std::fs::remove_file(&dir);
+    }
+
+    #[test]
+    fn loads_sample_epub() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../samples/demo.epub");
+        if !path.exists() {
+            return;
+        }
+        let loaded = load_book(path.to_str().unwrap()).unwrap();
+        assert!(loaded.text.contains("第一章"), "got {}", loaded.text);
+        assert!(loaded.text.contains("第二章"), "got {}", loaded.text);
+        assert_eq!(loaded.encoding, "epub");
     }
 }

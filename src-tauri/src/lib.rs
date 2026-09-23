@@ -1,4 +1,6 @@
 mod config;
+mod epub;
+mod pdftext;
 mod textload;
 
 use config::{config_file_in, load_config_from, save_config_to, AppConfig};
@@ -10,7 +12,6 @@ use tauri::{AppHandle, Manager, State, WebviewWindow};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
 struct HideGuard {
-    /// 防止「热键刚显示就因失焦再隐藏」
     suspend_blur_hide: AtomicBool,
     config: Mutex<AppConfig>,
 }
@@ -37,9 +38,10 @@ fn schedule_unsuspend(app: AppHandle) {
     });
 }
 
+/// 按扩展名分发：txt / epub / pdf
 #[tauri::command]
 fn load_text(path: String) -> Result<textload::LoadedText, String> {
-    textload::load_text(&path)
+    textload::load_book(&path)
 }
 
 #[tauri::command]
@@ -81,7 +83,7 @@ fn bootstrap_config(app: &AppHandle) -> AppConfig {
     resolve_config(app).unwrap_or_default()
 }
 
-/// 系统对话框打开期间挂起「失焦隐藏」，避免打开文件时窗口自己消失。
+/// 系统对话框打开期间挂起「失焦隐藏」
 #[tauri::command]
 fn set_suspend_blur_hide(state: State<'_, HideGuard>, suspend: bool) {
     state.suspend_blur_hide.store(suspend, Ordering::SeqCst);
@@ -144,7 +146,6 @@ pub fn run() {
                 });
             }
 
-            // 极简托盘：便于热键失效时仍能唤出（摸鱼保险丝）
             let show = MenuItem::with_id(app, "show", "显示 / 隐藏", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show, &quit])?;

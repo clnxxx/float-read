@@ -2,6 +2,16 @@ import "./style.css";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
+
+type ResizeDir =
+  | "East"
+  | "North"
+  | "NorthEast"
+  | "NorthWest"
+  | "South"
+  | "SouthEast"
+  | "SouthWest"
+  | "West";
 import { applyFont, onScroll, renderText, restoreScroll, showPlaceholder } from "./reader";
 import { initSettingsUi } from "./settings";
 import {
@@ -68,7 +78,7 @@ async function openFile(path?: string): Promise<void> {
     try {
       const picked = await openDialog({
         multiple: false,
-        filters: [{ name: "纯文本", extensions: ["txt"] }],
+        filters: [{ name: "书籍", extensions: ["txt", "epub", "pdf"] }],
       });
       if (typeof picked === "string") target = picked;
     } finally {
@@ -105,14 +115,26 @@ function mountDragEdges(): void {
     el.setAttribute("data-tauri-drag-region", "");
     appRoot.appendChild(el);
   }
-  // 正文区按住左键即可拖动窗口；按钮/面板不参与拖拽
   for (const el of document.querySelectorAll("#chrome, #panel")) {
     el.addEventListener("mousedown", (e) => e.stopPropagation());
   }
 }
 
+function mountResizeHandles(): void {
+  for (const el of document.querySelectorAll<HTMLElement>(".resize-handle")) {
+    const dir = el.dataset.dir as ResizeDir | undefined;
+    if (!dir) continue;
+    el.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void getCurrentWindow().startResizeDragging(dir);
+    });
+  }
+}
+
 async function bootstrap(): Promise<void> {
   mountDragEdges();
+  mountResizeHandles();
   await loadConfig();
   showPlaceholder(true);
 
