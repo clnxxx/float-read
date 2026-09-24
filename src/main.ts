@@ -132,9 +132,24 @@ function mountResizeHandles(): void {
   }
 }
 
+function mountSlowWheel(): void {
+  const reader = document.getElementById("reader")!;
+  // 系统滚轮步进偏大，改用手动小步滚动
+  reader.addEventListener(
+    "wheel",
+    (e) => {
+      e.preventDefault();
+      const dy = e.deltaMode === 1 ? e.deltaY * 24 : e.deltaY;
+      reader.scrollTop += dy * 0.35;
+    },
+    { passive: false },
+  );
+}
+
 async function bootstrap(): Promise<void> {
   mountDragEdges();
   mountResizeHandles();
+  mountSlowWheel();
   await loadConfig();
   showPlaceholder(true);
 
