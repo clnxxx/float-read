@@ -1,6 +1,6 @@
 [package]
 name = "float-read"
-version = "0.1.0"
+version = "0.1.2"
 description = "透明悬浮摸鱼阅读"
 authors = ["float-read"]
 edition = "2021"
