@@ -1,0 +1,67 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macos-universal
+            platform: macos-latest
+            args: --target universal-apple-darwin
+          - name: windows-x64
+            platform: windows-latest
+            args: --target x86_64-pc-windows-msvc
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.name == 'windows-x64' && 'x86_64-pc-windows-msvc' || 'aarch64-apple-darwin,x86_64-apple-darwin' }}
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install frontend deps
+        run: npm ci
+
+      - name: Build & upload to GitHub Release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_type == 'tag' && github.ref_name || 'v0.0.0-dev' }}
+          releaseName: "浮阅 ${{ github.ref_type == 'tag' && github.ref_name || 'dev' }}"
+          releaseBody: |
+            浮阅 · 透明摸鱼阅读
+
+            - macOS: 打开 `浮阅_*.dmg`，把「浮阅」拖进「应用程序」
+            - Windows: 运行 `浮阅_*-setup.exe` 安装
+            - 热键 `Cmd/Ctrl + Shift + H` 隐蔽；失焦自动隐藏
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
+
+  # 手动触发时只出 Artifact，不出 Release
+  artifacts-only:
+    if: github.ref_type != 'tag'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Draft release assets attached by tauri-action (dev build may use v0.0.0-dev tag)."
