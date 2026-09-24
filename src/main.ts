@@ -50,12 +50,20 @@ function scheduleSave(): void {
     void invoke("save_config_cmd", { config }).catch((err) => {
       console.error("save config failed", err);
     });
-  }, 200);
+  }, 400);
 }
+
+let lastProgressSave = 0;
 
 function persistProgress(ratio: number): void {
   if (!currentPath) return;
   config.progress = { ...config.progress, [currentPath]: ratio };
+  const now = Date.now();
+  if (now - lastProgressSave < 800 && ratio > 0 && ratio < 1) {
+    scheduleSave();
+    return;
+  }
+  lastProgressSave = now;
   scheduleSave();
 }
 
@@ -90,16 +98,14 @@ async function openFile(path?: string): Promise<void> {
   try {
     const loaded = await invoke<LoadedText>("load_text", { path: target });
     currentPath = loaded.path;
-    renderText(loaded);
+    await renderText(loaded);
     config.recentFiles = pushRecent(config.recentFiles, loaded.path);
     settings.setConfig(config);
     scheduleSave();
     const ratio = config.progress[loaded.path] ?? 0;
-    // 等一帧确保布局完成
-    requestAnimationFrame(() => restoreScroll(ratio));
+    restoreScroll(ratio);
   } catch (err) {
     console.error("open file failed", err);
-    // 失败时不清空当前正文，只在还没有书时回到占位
     if (!currentPath) showPlaceholder(true);
   }
 }

@@ -86,10 +86,16 @@ body {
   font-size: var(--reader-font-size);
   line-height: 1.45;
   letter-spacing: 0.02em;
-  white-space: pre-wrap;
-  word-break: break-word;
   min-height: 100%;
   padding-bottom: 8px;
+}
+
+/* 大文件：离屏段落不参与布局 */
+#content .block {
+  white-space: pre-wrap;
+  word-break: break-word;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 6em;
 }
 
 /* 极简角标：默认半透明，悬停显现 */

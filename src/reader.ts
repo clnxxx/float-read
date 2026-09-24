@@ -18,9 +18,61 @@ export function showPlaceholder(show: boolean): void {
   content.hidden = show;
 }
 
-export function renderText(loaded: LoadedText): void {
-  content.textContent = loaded.text;
-  showPlaceholder(loaded.text.length === 0);
+/** 约每块字符数：过大会卡布局，过小会碎成上万节点 */
+const BLOCK_CHARS = 3500;
+
+function splitBlocks(text: string): string[] {
+  if (text.length <= BLOCK_CHARS) return text ? [text] : [];
+  const blocks: string[] = [];
+  let pos = 0;
+  while (pos < text.length) {
+    let end = Math.min(text.length, pos + BLOCK_CHARS);
+    if (end < text.length) {
+      const nl = text.lastIndexOf("\n", end);
+      if (nl > pos + BLOCK_CHARS * 0.55) end = nl + 1;
+    }
+    blocks.push(text.slice(pos, end));
+    pos = end;
+  }
+  return blocks;
+}
+
+/**
+ * 分块渲染：每块 content-visibility:auto，离屏块跳过布局。
+ * 大文件分帧提交，避免一次性建 DOM 把界面冻住。
+ */
+export function renderText(loaded: LoadedText): Promise<void> {
+  const text = loaded.text;
+  content.replaceChildren();
+  if (!text) {
+    showPlaceholder(true);
+    return Promise.resolve();
+  }
+  showPlaceholder(false);
+
+  const blocks = splitBlocks(text);
+  let i = 0;
+  const CHUNK = 40;
+
+  return new Promise((resolve) => {
+    const pump = () => {
+      const frag = document.createDocumentFragment();
+      const end = Math.min(blocks.length, i + CHUNK);
+      for (; i < end; i++) {
+        const div = document.createElement("div");
+        div.className = "block";
+        div.textContent = blocks[i];
+        frag.appendChild(div);
+      }
+      content.appendChild(frag);
+      if (i < blocks.length) {
+        requestAnimationFrame(pump);
+      } else {
+        resolve();
+      }
+    };
+    pump();
+  });
 }
 
 export function scrollRatio(): number {
