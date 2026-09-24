@@ -32,8 +32,6 @@ npm run tauri dev
 npm run tauri build   # 本机安装包
 ```
 
-维护者发版流程见 [docs/RELEASING.md](./docs/RELEASING.md)。
-
 ## License
 
 [MIT](./LICENSE) · 第三方组件见 [THIRD_PARTY.md](./THIRD_PARTY.md)
