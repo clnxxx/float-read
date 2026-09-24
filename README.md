@@ -41,4 +41,4 @@ npm run tauri build   # 本机安装包
 
 ## License
 
-[MIT](./LICENSE)
+[MIT](./LICENSE) · 第三方组件见 [THIRD_PARTY.md](./THIRD_PARTY.md)
