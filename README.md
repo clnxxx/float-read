@@ -32,12 +32,7 @@ npm run tauri dev
 npm run tauri build   # 本机安装包
 ```
 
-## 发版（macOS + Windows）
-
-1. 在 GitHub 新建仓库并推送本项目
-2. 打标签并推送：`git tag v0.1.0 && git push origin v0.1.0`
-3. Actions 的 `release` 工作流会在 macOS / Windows 上构建，把 dmg / exe 挂到 **Draft Release**
-4. 到 Releases 页检查后点 **Publish**
+维护者发版流程见 [docs/RELEASING.md](./docs/RELEASING.md)。
 
 ## License
 
