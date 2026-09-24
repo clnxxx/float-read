@@ -124,6 +124,14 @@ function mountDragEdges(): void {
   for (const el of document.querySelectorAll("#chrome, #panel")) {
     el.addEventListener("mousedown", (e) => e.stopPropagation());
   }
+  // 正文区兜底：子节点没有 drag-region 时也能拖动窗口
+  const reader = document.getElementById("reader")!;
+  reader.addEventListener("mousedown", (e) => {
+    if (e.button !== 0) return;
+    const t = e.target as HTMLElement | null;
+    if (t?.closest("#chrome, #panel, .resize-handle, button, select, input")) return;
+    void getCurrentWindow().startDragging();
+  });
 }
 
 function mountResizeHandles(): void {

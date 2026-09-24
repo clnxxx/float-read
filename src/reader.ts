@@ -62,6 +62,7 @@ export function renderText(loaded: LoadedText): Promise<void> {
         const div = document.createElement("div");
         div.className = "block";
         div.textContent = blocks[i];
+        div.setAttribute("data-tauri-drag-region", "");
         frag.appendChild(div);
       }
       content.appendChild(frag);
