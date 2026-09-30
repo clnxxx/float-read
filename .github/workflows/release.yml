@@ -51,9 +51,10 @@ jobs:
           releaseBody: |
             浮阅 · 透明摸鱼阅读
 
-            - macOS: 打开 `浮阅_*.dmg`，把「浮阅」拖进「应用程序」
-            - Windows: 运行 `浮阅_*-setup.exe` 安装
-            - 热键 `Cmd/Ctrl + Shift + H` 隐蔽；失焦自动隐藏
+            - macOS: 打开 `FloatRead_*_universal.dmg`，把「浮阅」拖进「应用程序」（Apple Silicon / Intel 通用）
+            - Windows: 运行 `FloatRead_*_x64-setup.exe` 安装
+            - 热键 `Cmd/Ctrl + Shift + H` 隐蔽；失焦/鼠标移出自动隐藏，移回唤出
+            - `E` 自动滚动（W/S 调速）· `T` 目录 · 窗口位置尺寸自动记忆
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
