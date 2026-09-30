@@ -47,6 +47,26 @@ describe("normalizeConfig", () => {
     const cfg = normalizeConfig({ fontColor: "black" });
     expect(cfg.fontColor).toBe("black");
   });
+
+  it("caps progress entries and keeps recent files' records", () => {
+    const progress: Record<string, number> = {};
+    for (let i = 0; i < 300; i++) progress[`/f${i}`] = 0.5;
+    const cfg = normalizeConfig({ progress, recentFiles: ["/f299"] });
+    expect(Object.keys(cfg.progress)).toHaveLength(200);
+    expect(cfg.progress["/f299"]).toBe(0.5);
+  });
+
+  it("clamps autoScrollSpeed and validates window geometry", () => {
+    const cfg = normalizeConfig({
+      autoScrollSpeed: 9999,
+      window: { x: 10, y: -5, width: 20, height: 99999 },
+    });
+    expect(cfg.autoScrollSpeed).toBe(400);
+    expect(cfg.window).toEqual({ x: 10, y: -5, width: 80, height: 10000 });
+    expect(normalizeConfig({}).window).toBeNull();
+    expect(normalizeConfig({ window: { x: "bad" } as never }).window).toBeNull();
+    expect(normalizeConfig({ autoScrollSpeed: Number.NaN }).autoScrollSpeed).toBe(40);
+  });
 });
 
 describe("pushRecent", () => {

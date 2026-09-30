@@ -6,16 +6,27 @@ export interface LoadedText {
 
 export type FontColor = "white" | "black";
 
+export interface WindowGeometry {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface AppConfig {
   fontFamily: string;
   fontSize: number;
   fontColor: FontColor;
   recentFiles: string[];
   progress: Record<string, number>;
+  window: WindowGeometry | null;
+  autoScrollSpeed: number;
 }
 
 export const MIN_FONT_SIZE = 12;
 export const MAX_FONT_SIZE = 48;
+export const MIN_AUTO_SCROLL_SPEED = 10;
+export const MAX_AUTO_SCROLL_SPEED = 400;
 export const DEFAULT_FONT_FAMILY = "PingFang SC";
 export const DEFAULT_FONT_COLOR: FontColor = "white";
 
@@ -36,6 +47,8 @@ export function defaultConfig(): AppConfig {
     fontColor: DEFAULT_FONT_COLOR,
     recentFiles: [],
     progress: {},
+    window: null,
+    autoScrollSpeed: 40,
   };
 }
 
@@ -51,6 +64,42 @@ export function clampFontSize(size: number): number {
 
 export function normalizeFontColor(value: unknown): FontColor {
   return value === "black" ? "black" : "white";
+}
+
+/** progress 只进不出会无限膨胀；超过上限时优先保留最近文件的记录 */
+const MAX_PROGRESS_ENTRIES = 200;
+
+function pruneProgress(
+  progress: Record<string, number>,
+  recent: string[],
+): Record<string, number> {
+  const keys = Object.keys(progress);
+  if (keys.length <= MAX_PROGRESS_ENTRIES) return progress;
+  const kept: Record<string, number> = {};
+  for (const path of recent) {
+    if (path in progress) kept[path] = progress[path];
+  }
+  for (const key of keys) {
+    if (Object.keys(kept).length >= MAX_PROGRESS_ENTRIES) break;
+    if (!(key in kept)) kept[key] = progress[key];
+  }
+  return kept;
+}
+
+function normalizeWindowGeometry(v: unknown): WindowGeometry | null {
+  if (!v || typeof v !== "object") return null;
+  const o = v as Record<string, unknown>;
+  const x = Number(o.x);
+  const y = Number(o.y);
+  const width = Number(o.width);
+  const height = Number(o.height);
+  if (![x, y, width, height].every(Number.isFinite)) return null;
+  return {
+    x,
+    y,
+    width: Math.min(10000, Math.max(80, width)),
+    height: Math.min(10000, Math.max(18, height)),
+  };
 }
 
 export function normalizeConfig(input: Partial<AppConfig> | null | undefined): AppConfig {
@@ -72,7 +121,19 @@ export function normalizeConfig(input: Partial<AppConfig> | null | undefined): A
       if (Number.isFinite(r)) progress[k] = r;
     }
   }
-  return { fontFamily, fontSize, fontColor, recentFiles, progress };
+  const speed = Math.round(Number(input.autoScrollSpeed));
+  const autoScrollSpeed = Number.isFinite(speed)
+    ? Math.min(MAX_AUTO_SCROLL_SPEED, Math.max(MIN_AUTO_SCROLL_SPEED, speed))
+    : base.autoScrollSpeed;
+  return {
+    fontFamily,
+    fontSize,
+    fontColor,
+    recentFiles,
+    progress: pruneProgress(progress, recentFiles),
+    window: normalizeWindowGeometry(input.window),
+    autoScrollSpeed,
+  };
 }
 
 export function pushRecent(recent: string[], path: string): string[] {

@@ -10,6 +10,7 @@
       <aside id="chrome" aria-label="工具">
         <button id="btn-open" type="button" title="打开 TXT">打开</button>
         <button id="btn-font" type="button" title="字体设置">字体</button>
+        <button id="btn-toc" type="button" title="目录 (T)">目录</button>
         <button id="btn-hide" type="button" title="隐蔽 (⌘⇧H)">隐</button>
       </aside>
 
@@ -34,8 +35,16 @@
         </div>
       </div>
 
+      <div id="toc-panel" hidden>
+        <div class="toc-head">
+          <span>目录</span>
+          <button id="toc-close" type="button" title="关闭">×</button>
+        </div>
+        <ul id="toc-list"></ul>
+      </div>
+
       <main id="reader" tabindex="0" data-tauri-drag-region>
-        <div id="placeholder" data-tauri-drag-region>打开 TXT 开始摸鱼阅读<br /><span>⌘⇧H 隐蔽 · 失焦自动隐藏</span></div>
+        <div id="placeholder" data-tauri-drag-region>打开 TXT 开始摸鱼阅读<br /><span>⌘⇧H 隐蔽 · 失焦/鼠标移出自动隐藏</span></div>
         <article id="content" hidden data-tauri-drag-region></article>
       </main>
       <div class="resize-handle n" data-dir="North"></div>
@@ -46,6 +55,7 @@
       <div class="resize-handle ne" data-dir="NorthEast"></div>
       <div class="resize-handle sw" data-dir="SouthWest"></div>
       <div class="resize-handle se" data-dir="SouthEast"></div>
+      <div id="toast" hidden></div>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

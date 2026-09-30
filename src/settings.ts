@@ -86,6 +86,10 @@ export function initSettingsUi(opts: {
 
   function togglePanel() {
     panel.hidden = !panel.hidden;
+    if (panel.hidden) {
+      // 关面板后交还焦点，否则滑杆/下拉持有焦点会吃掉 W/S/E 等快捷键
+      (document.activeElement as HTMLElement | null)?.blur();
+    }
   }
 
   return {

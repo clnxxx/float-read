@@ -90,12 +90,12 @@ body {
   padding-bottom: 8px;
 }
 
-/* 大文件：离屏段落不参与布局 */
+/* 大文件：离屏段落不参与布局；占位高度由 reader.ts 实测校准（em 倍数），默认 6em */
 #content .block {
   white-space: pre-wrap;
   word-break: break-word;
   content-visibility: auto;
-  contain-intrinsic-size: auto 6em;
+  contain-intrinsic-size: auto calc(var(--block-est-em, 6) * 1em);
 }
 
 /* 极简角标：默认半透明，悬停显现 */
@@ -131,6 +131,91 @@ body {
 
 #chrome button:hover {
   background: rgba(40, 40, 44, 0.75);
+}
+
+#chrome button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* 目录面板：结构与设置面板一致，列表区独立滚动 */
+#toc-panel {
+  position: fixed;
+  top: 40px;
+  right: 8px;
+  width: 230px;
+  max-height: 75vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px;
+  border: 1px solid var(--chrome-border);
+  background: var(--chrome-bg);
+  color: var(--chrome-ink);
+  font-family: var(--reader-font-family);
+  font-size: 12px;
+  backdrop-filter: blur(12px);
+  z-index: 21;
+}
+
+#toc-panel[hidden] {
+  display: none !important;
+}
+
+.toc-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px 6px;
+  opacity: 0.85;
+}
+
+.toc-head button {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--chrome-ink);
+  font-size: 14px;
+  line-height: 1;
+  padding: 2px 6px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.toc-head button:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+#toc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 6px 8px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+#toc-list button {
+  appearance: none;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: var(--chrome-ink);
+  padding: 4px 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-radius: 4px;
+}
+
+#toc-list button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+#toc-list li.active button {
+  background: rgba(255, 255, 255, 0.16);
 }
 
 #panel {
@@ -234,33 +319,6 @@ body {
   background: rgba(255, 255, 255, 0.08);
 }
 
-/* 拖拽移动：仅保留上下细条 + 正文 data-tauri-drag-region；左右交给缩放手柄 */
-.drag-edge {
-  position: fixed;
-  z-index: 5;
-  -webkit-app-region: drag;
-  app-region: drag;
-}
-
-.drag-edge.top {
-  top: 0;
-  left: 16px;
-  right: 16px;
-  height: 8px;
-}
-
-.drag-edge.bottom {
-  bottom: 0;
-  left: 16px;
-  right: 16px;
-  height: 8px;
-}
-
-.drag-edge.left,
-.drag-edge.right {
-  display: none;
-}
-
 /* 手动改大小：加宽命中区，悬停显示亮条 */
 .resize-handle {
   position: fixed;
@@ -335,4 +393,23 @@ body {
   width: 20px;
   height: 20px;
   cursor: nwse-resize;
+}
+
+/* 打开失败等一次性提示 */
+#toast {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  max-width: calc(100% - 32px);
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--chrome-border);
+  background: rgba(60, 20, 20, 0.72);
+  color: #ffd9d9;
+  font-family: var(--reader-font-family);
+  font-size: 12px;
+  z-index: 50;
+  pointer-events: none;
+  backdrop-filter: blur(8px);
 }

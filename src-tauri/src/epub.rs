@@ -227,6 +227,11 @@ pub fn html_to_text(html: &str) -> String {
                     if !t.ends_with('/') {
                         skip_until_close = Some(name);
                     }
+                } else if t.starts_with("title") {
+                    // 跳过 <title>：否则每章开头的文档标题会混进正文，与 h1 重复
+                    if !t.ends_with('/') {
+                        skip_until_close = Some("title".to_string());
+                    }
                 } else if t.starts_with("br")
                     || t == "p"
                     || t.starts_with("/p")
@@ -325,6 +330,14 @@ mod tests {
         assert!(text.contains("你好 世界"));
         assert!(!text.contains("color:red"));
         assert!(!text.contains("x=1"));
+    }
+
+    #[test]
+    fn skips_head_title_text() {
+        let html = "<html><head><title>浮阅示例书名</title></head><body><h1>第一章</h1><p>正文</p></body></html>";
+        let text = html_to_text(html);
+        assert!(text.contains("第一章"));
+        assert!(!text.contains("浮阅示例书名"));
     }
 
     #[test]
